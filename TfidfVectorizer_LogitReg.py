@@ -254,3 +254,31 @@ Xtrial2 = tfidf_vectorizer.transform(Xtrial)
 Ytrial = clf_tfidf.predict_proba(Xtrial2)[:,1]
 
 trial['preds'] = Ytrial
+
+########### TO CALL ####################
+
+import os
+import pandas as pd
+import numpy as np
+import pickle
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+pd.set_option('display.float_format', lambda x: '%.5f' % x)
+
+filename = 'HOME/NLP/finalized_model.sav'
+loaded_model = pickle.load(open(filename, 'rb'))
+tfidf_vectorizer = pickle.load(open("/HOME/NLP/tfidf_vectorizer.pickle", 'rb'))
+
+def ADASprob(tgt_file):
+#     tfidf_vectorizer = TfidfVectorizer()
+    df = pd.read_csv(tgt_file, low_memory = False)
+    Xtrial = df['Value'].fillna('BLANK').tolist()
+    Xtrial2 = tfidf_vectorizer.transform(Xtrial) # tfidf_vectorizer scikit package
+    Ytrial = loaded_model.predict_proba(Xtrial2)[:,1] # Return P(X == 1)
+    df['ADAS PROB'] = Ytrial
+    df['_merge'] = pd.Categorical(df['_merge'], ["both","right_only", "left_only"])
+    df = df.sort_values(by = ['_merge', 'ADAS PROB'], ascending = False)
+#     df.to_csv(tgt_file)
+    return df
+    
+#Call
+ADASprob('/HOME/audi_mapped_melt_flagged.csv')
